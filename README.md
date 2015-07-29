@@ -9,7 +9,7 @@ Please install following packages:
 ### Usage
 ``mkvremux.sh DIRECTORY``
 
-Directory can be absolute or relative. The script searches for MKV-files recursively within the given directory. If something is found, it extracts only the video and audio tracks (ignores all the rest), converts the audio from whatever to AC3 (448kbps) and muxes a new MKV-file. The original MKV-file is stored with a BKP-suffix. The original MKV-file should contain at least (will be checked by the script):
+The script searches for MKV-files recursively within the given directory. If something is found, it extracts only the video and audio tracks (ignores all the rest), converts the audio from whatever to AC3 (448kbps) and muxes a new MKV-file. The original MKV-file is stored with a BKP-suffix. It should contain at least (will be checked by the script):
 * Video-Track (H.264, Full-HD)
 * Audio-Track (6-Channel, german)
 * Audio-Track (6-Channel, english)
