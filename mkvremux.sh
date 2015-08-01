@@ -38,7 +38,6 @@ for f in $(find "$DIR" -name "*.mkv"); do
 
     ID=-1
     LANGUAGE="und"
-    QUAL=0
     TYPE="und"
 
     while IFS= read -r line || [[ -n "$line" ]]; do
@@ -50,7 +49,6 @@ for f in $(find "$DIR" -name "*.mkv"); do
         if [[ "$line" = $(echo "*A track*") ]]; then
             ID=$[$ID+1]
             LANGUAGE="und"
-            QUAL=0
             TYPE="und"
         fi
 
@@ -63,10 +61,6 @@ for f in $(find "$DIR" -name "*.mkv"); do
             TYPE="aud"
         fi
 
-        if [ "$TYPE" = "aud" ] && [[ "$line" = $(echo "*Channels: 6*") ]]; then
-            QUAL=1
-        fi
-
         if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "und" ] && [[ "$line" = $(echo "*Language: eng*") ]]; then
             LANGUAGE="eng"
         fi
@@ -75,12 +69,12 @@ for f in $(find "$DIR" -name "*.mkv"); do
             LANGUAGE="ger"
         fi
 
-        if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "eng" ] && [ "$QUAL" = 1 ]; then
+        if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "eng" ]; then
             echo "Found track: Audio, eng (ID: $ID)"
             mkvextract tracks "$f" "$ID:audio.eng.org.tmp"
         fi
 
-        if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "ger" ] && [ "$QUAL" = 1 ]; then
+        if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "ger" ]; then
             echo "Found track: Audio, ger (ID: $ID)"
             mkvextract tracks "$f" "$ID:audio.ger.org.tmp"
         fi
