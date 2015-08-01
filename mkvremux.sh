@@ -29,12 +29,14 @@ while IFS= read -r -d '' f; do
        (( "$(grep -c "h.264" "${INFO}")" == 0 )) ||
        (( "$(grep -c "Pixel width: 1920" "${INFO}")" == 0 )); then
         ERR+=("$f (too many video tracks or bad video quality)")
+        rm "$BASE"/*.tmp
         continue
     fi
 
     if (( "$(grep -c "Track type: audio" "${INFO}")" < 2 )) ||
        (( "$(grep -c "Channels: [1,2,3,4]" "${INFO}")" > 0 )); then
         ERR+=("$f (not enough audio tracks found or bad audio quality)")
+        rm "$BASE"/*.tmp
         continue
     fi
 
@@ -92,6 +94,7 @@ while IFS= read -r -d '' f; do
        [ ! -f "$BASE/audio.eng.org.tmp" ] ||
        [ ! -f "$BASE/audio.ger.org.tmp" ]; then
         ERR+=("$f (extracting needed tracks failed)")
+        rm "$BASE"/*.tmp
         continue
     fi
 
@@ -101,12 +104,12 @@ while IFS= read -r -d '' f; do
     if [ ! -f "$BASE/audio.eng.ac3.tmp" ] ||
        [ ! -f "$BASE/audio.ger.ac3.tmp" ]; then
         ERR+=("$f (audio conversion failed)")
+        rm "$BASE"/*.tmp
         continue
     fi
 
     mv "${f}" "$f.bkp"
     mkvmerge -o "${f}" --default-language "ger" "$BASE/video.h264.tmp" --language 0:ger "$BASE/audio.ger.ac3.tmp" --language 0:eng "$BASE/audio.eng.ac3.tmp"
-
     rm "$BASE"/*.tmp
 
 done < <(find "${DIR}" -type f -name "*.mkv" -print0)
