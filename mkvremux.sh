@@ -17,22 +17,23 @@ if [ ! -d "$DIR" ]; then
     exit 1
 fi
 
-for f in $(find "$DIR" -name "*.mkv"); do
+while IFS= read -r -d '' f; do
     BASE=$(dirname "$f")
     INFO="$BASE/mkvinfo.tmp"
 
-    echo "Processing: $f"
-    mkvinfo -r "$INFO" "$f"
 
-    if (( "$(grep -c "Track type: video" "$INFO")" > 1 )) ||
-       (( "$(grep -c "h.264" "$INFO")" == 0 )) ||
-       (( "$(grep -c "Pixel width: 1920" "$INFO")" == 0 )); then
+    echo "Processing: $f"
+    mkvinfo -r "${INFO}" "${f}"
+
+    if (( "$(grep -c "Track type: video" "${INFO}")" > 1 )) ||
+       (( "$(grep -c "h.264" "${INFO}")" == 0 )) ||
+       (( "$(grep -c "Pixel width: 1920" "${INFO}")" == 0 )); then
         ERR+=("$f (too many video tracks or bad video quality)")
         continue
     fi
 
-    if (( "$(grep -c "Track type: audio" "$INFO")" < 2 )) ||
-       (( "$(grep -c "Channels: [1,2,3,4]" "$INFO")" > 0 )); then
+    if (( "$(grep -c "Track type: audio" "${INFO}")" < 2 )) ||
+       (( "$(grep -c "Channels: [1,2,3,4]" "${INFO}")" > 0 )); then
         ERR+=("$f (not enough audio tracks found or bad audio quality)")
         continue
     fi
@@ -43,7 +44,9 @@ for f in $(find "$DIR" -name "*.mkv"); do
 
     while IFS= read -r line || [[ -n "$line" ]]; do
 
-        if [ -f "$BASE/video.h264.tmp" ] && [ -f "$BASE/audio.eng.org.tmp" ] && [ -f "$BASE/audio.ger.org.tmp" ]; then
+        if [ -f "$BASE/video.h264.tmp" ] &&
+           [ -f "$BASE/audio.eng.org.tmp" ] &&
+           [ -f "$BASE/audio.ger.org.tmp" ]; then
             break
         fi
 
@@ -54,32 +57,40 @@ for f in $(find "$DIR" -name "*.mkv"); do
         fi
 
         if [[ "$line" = $(echo "*Track type: video*") ]]; then
-            mkvextract tracks "$f" "$ID:video.h264.tmp"
+            mkvextract tracks "${f}" "$ID:$BASE/video.h264.tmp"
         fi
 
         if [[ "$line" = $(echo "*Track type: audio*") ]]; then
             TYPE="aud"
         fi
 
-        if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "und" ] && [[ "$line" = $(echo "*Language: eng*") ]]; then
+        if [ "$TYPE" = "aud" ] &&
+           [ "$LANGUAGE" = "und" ] &&
+           [[ "$line" = $(echo "*Language: eng*") ]]; then
             LANGUAGE="eng"
         fi
 
-        if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "und" ] && [[ "$line" = $(echo "*Language: ger*") ]]; then
+        if [ "$TYPE" = "aud" ] &&
+           [ "$LANGUAGE" = "und" ] &&
+           [[ "$line" = $(echo "*Language: ger*") ]]; then
             LANGUAGE="ger"
         fi
 
-        if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "eng" ]; then
-            mkvextract tracks "$f" "$ID:audio.eng.org.tmp"
+        if [ "$TYPE" = "aud" ] &&
+           [ "$LANGUAGE" = "eng" ]; then
+            mkvextract tracks "${f}" "$ID:$BASE/audio.eng.org.tmp"
         fi
 
-        if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "ger" ]; then
-            mkvextract tracks "$f" "$ID:audio.ger.org.tmp"
+        if [ "$TYPE" = "aud" ] &&
+           [ "$LANGUAGE" = "ger" ]; then
+            mkvextract tracks "${f}" "$ID:$BASE/audio.ger.org.tmp"
         fi
 
-    done < "$INFO"
+    done < "${INFO}"
 
-    if [ ! -f "$BASE/video.h264.tmp" ] || [ ! -f "$BASE/audio.eng.org.tmp" ] || [ ! -f "$BASE/audio.ger.org.tmp" ]; then
+    if [ ! -f "$BASE/video.h264.tmp" ] ||
+       [ ! -f "$BASE/audio.eng.org.tmp" ] ||
+       [ ! -f "$BASE/audio.ger.org.tmp" ]; then
         ERR+=("$f (extracting needed tracks failed)")
         continue
     fi
@@ -87,19 +98,20 @@ for f in $(find "$DIR" -name "*.mkv"); do
     avconv -i "$BASE/audio.eng.org.tmp" -aq 448k -f ac3 "$BASE/audio.eng.ac3.tmp"
     avconv -i "$BASE/audio.ger.org.tmp" -aq 448k -f ac3 "$BASE/audio.ger.ac3.tmp"
 
-    if [ ! -f "$BASE/audio.eng.ac3.tmp" ] || [ ! -f "$BASE/audio.ger.ac3.tmp" ]; then
+    if [ ! -f "$BASE/audio.eng.ac3.tmp" ] ||
+       [ ! -f "$BASE/audio.ger.ac3.tmp" ]; then
         ERR+=("$f (audio conversion failed)")
         continue
     fi
 
-    mv "$f" "$f.bkp"
-    mkvmerge -o "$f" --default-language "ger" "$BASE/video.h264.tmp" --language 0:ger "$BASE/audio.ger.ac3.tmp" --language 0:eng "$BASE/audio.eng.ac3.tmp"
+    mv "${f}" "$f.bkp"
+    mkvmerge -o "${f}" --default-language "ger" "$BASE/video.h264.tmp" --language 0:ger "$BASE/audio.ger.ac3.tmp" --language 0:eng "$BASE/audio.eng.ac3.tmp"
 
     rm "$BASE"/*.tmp
 
-done
+done < <(find "${DIR}" -type f -name "*.mkv" -print0)
 
-if [ "${#ERR[@]}" > 0 ]; then
+if (( "${#ERR[@]}" > 0 )); then
     echo "Errors:"
     printf '%s\n' "${ERR[@]}"
 fi
