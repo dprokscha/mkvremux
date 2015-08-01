@@ -23,8 +23,9 @@ for f in $(find "$DIR" -name "*.mkv"); do
     echo "Processing: $f"
     mkvinfo -r "$INFO" "$f"
 
-    if (( "$(grep -c "Channels: 6" "$INFO")" < 2 )); then
-        echo "Omitted: $f (not enough audio channels found or bad audio quality)"
+    if (( "$(grep -c "Track type: audio" "$INFO")" < 2 )) ||
+       (( "$(grep -c "Channels: [1,2,3,4]" "$INFO")" > 0 )); then
+        echo "Omitted: $f (not enough audio tracks found or bad audio quality)"
         continue
     fi
 
