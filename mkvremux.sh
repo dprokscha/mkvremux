@@ -23,18 +23,18 @@ while IFS= read -r -d '' f; do
 
 
     echo "Processing: $f"
-    mkvinfo -r "${INFO}" "${f}"
+    mkvinfo -r "$INFO" "$f"
 
-    if (( "$(grep -c "Track type: video" "${INFO}")" > 1 )) ||
-       (( "$(grep -c "h.264" "${INFO}")" == 0 )) ||
-       (( "$(grep -c "Pixel width: 1920" "${INFO}")" == 0 )); then
+    if (( "$(grep -c "Track type: video" "$INFO")" > 1 )) ||
+       (( "$(grep -c "h.264" "$INFO")" == 0 )) ||
+       (( "$(grep -c "Pixel width: 1920" "$INFO")" == 0 )); then
         ERR+=("$f (too many video tracks or bad video quality)")
         rm "$BASE"/*.tmp
         continue
     fi
 
-    if (( "$(grep -c "Track type: audio" "${INFO}")" < 2 )) ||
-       (( "$(grep -c "Channels: [1,2,3,4]" "${INFO}")" > 0 )); then
+    if (( "$(grep -c "Track type: audio" "$INFO")" < 2 )) ||
+       (( "$(grep -c "Channels: [1,2,3,4]" "$INFO")" > 0 )); then
         ERR+=("$f (not enough audio tracks found or bad audio quality)")
         rm "$BASE"/*.tmp
         continue
@@ -59,7 +59,7 @@ while IFS= read -r -d '' f; do
         fi
 
         if [[ "$line" = $(echo "*Track type: video*") ]]; then
-            mkvextract tracks "${f}" "$ID:$BASE/video.h264.tmp"
+            mkvextract tracks "$f" "$ID:$BASE/video.h264.tmp"
         fi
 
         if [[ "$line" = $(echo "*Track type: audio*") ]]; then
@@ -80,15 +80,15 @@ while IFS= read -r -d '' f; do
 
         if [ "$TYPE" = "aud" ] &&
            [ "$LANGUAGE" = "eng" ]; then
-            mkvextract tracks "${f}" "$ID:$BASE/audio.eng.org.tmp"
+            mkvextract tracks "$f" "$ID:$BASE/audio.eng.org.tmp"
         fi
 
         if [ "$TYPE" = "aud" ] &&
            [ "$LANGUAGE" = "ger" ]; then
-            mkvextract tracks "${f}" "$ID:$BASE/audio.ger.org.tmp"
+            mkvextract tracks "$f" "$ID:$BASE/audio.ger.org.tmp"
         fi
 
-    done < "${INFO}"
+    done < "$INFO"
 
     if [ ! -f "$BASE/video.h264.tmp" ] ||
        [ ! -f "$BASE/audio.eng.org.tmp" ] ||
@@ -108,11 +108,11 @@ while IFS= read -r -d '' f; do
         continue
     fi
 
-    mv "${f}" "$f.bkp"
-    mkvmerge -o "${f}" --default-language "ger" "$BASE/video.h264.tmp" --language 0:ger "$BASE/audio.ger.ac3.tmp" --language 0:eng "$BASE/audio.eng.ac3.tmp"
+    mv "$f" "$f.bkp"
+    mkvmerge -o "$f" --default-language "ger" "$BASE/video.h264.tmp" --language 0:ger "$BASE/audio.ger.ac3.tmp" --language 0:eng "$BASE/audio.eng.ac3.tmp"
     rm "$BASE"/*.tmp
 
-done < <(find "${DIR}" -type f -name "*.mkv" -print0)
+done < <(find "$DIR" -type f -name "*.mkv" -print0)
 
 if (( "${#ERR[@]}" > 0 )); then
     echo "Errors:"
