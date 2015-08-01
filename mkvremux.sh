@@ -6,6 +6,7 @@ hash avconv 2>/dev/null || { echo "Package not found: libav-tools"; exit 1; }
 
 DIR=$(echo "$1" | tr -s /); DIR=${DIR%/}
 SCRIPT_PATH=`pwd`
+ERR=()
 
 if [[ "$DIR" != /* ]]; then
     DIR="$SCRIPT_PATH/$DIR"
@@ -23,16 +24,16 @@ for f in $(find "$DIR" -name "*.mkv"); do
     echo "Processing: $f"
     mkvinfo -r "$INFO" "$f"
 
-    if (( "$(grep -c "Track type: audio" "$INFO")" < 2 )) ||
-       (( "$(grep -c "Channels: [1,2,3,4]" "$INFO")" > 0 )); then
-        echo "Omitted: $f (not enough audio tracks found or bad audio quality)"
-        continue
-    fi
-
     if (( "$(grep -c "Track type: video" "$INFO")" > 1 )) ||
        (( "$(grep -c "h.264" "$INFO")" == 0 )) ||
        (( "$(grep -c "Pixel width: 1920" "$INFO")" == 0 )); then
-        echo "Omitted: $f (too many video tracks or bad video quality)"
+        ERR+=("$f (too many video tracks or bad video quality)")
+        continue
+    fi
+
+    if (( "$(grep -c "Track type: audio" "$INFO")" < 2 )) ||
+       (( "$(grep -c "Channels: [1,2,3,4]" "$INFO")" > 0 )); then
+        ERR+=("$f (not enough audio tracks found or bad audio quality)")
         continue
     fi
 
@@ -53,7 +54,6 @@ for f in $(find "$DIR" -name "*.mkv"); do
         fi
 
         if [[ "$line" = $(echo "*Track type: video*") ]]; then
-            echo "Found track: Video (ID: $ID)"
             mkvextract tracks "$f" "$ID:video.h264.tmp"
         fi
 
@@ -70,19 +70,17 @@ for f in $(find "$DIR" -name "*.mkv"); do
         fi
 
         if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "eng" ]; then
-            echo "Found track: Audio, eng (ID: $ID)"
             mkvextract tracks "$f" "$ID:audio.eng.org.tmp"
         fi
 
         if [ "$TYPE" = "aud" ] && [ "$LANGUAGE" = "ger" ]; then
-            echo "Found track: Audio, ger (ID: $ID)"
             mkvextract tracks "$f" "$ID:audio.ger.org.tmp"
         fi
 
     done < "$INFO"
 
     if [ ! -f "$BASE/video.h264.tmp" ] || [ ! -f "$BASE/audio.eng.org.tmp" ] || [ ! -f "$BASE/audio.ger.org.tmp" ]; then
-        echo "Omitted: $f (extracting needed tracks failed)"
+        ERR+=("$f (extracting needed tracks failed)")
         continue
     fi
 
@@ -90,7 +88,7 @@ for f in $(find "$DIR" -name "*.mkv"); do
     avconv -i "$BASE/audio.ger.org.tmp" -aq 448k -f ac3 "$BASE/audio.ger.ac3.tmp"
 
     if [ ! -f "$BASE/audio.eng.ac3.tmp" ] || [ ! -f "$BASE/audio.ger.ac3.tmp" ]; then
-        echo "Omitted: $f (audio conversion failed)"
+        ERR+=("$f (audio conversion failed)")
         continue
     fi
 
@@ -100,6 +98,11 @@ for f in $(find "$DIR" -name "*.mkv"); do
     rm "$BASE"/*.tmp
 
 done
+
+if [ "${#ERR[@]}" > 0 ]; then
+    echo "Errors:"
+    printf '%s\n' "${ERR[@]}"
+fi
 
 echo "Done"
 exit 0
