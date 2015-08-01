@@ -2,7 +2,7 @@
 Remuxes any MKV (H.264, Full-HD) to H.264, Full-HD, AC3 audio (tracks: german/english)
 
 ### Requirements
-Please install following packages:
+A machine running ``/bin/bash`` with following installed packages:
 * ``mkvtoolnix``
 * ``libav-tools``
 
@@ -11,13 +11,13 @@ Please install following packages:
 
 The script searches for MKV-files recursively within the given directory. If something is found, it extracts only the video and audio tracks (ignores all the rest), converts the audio from whatever to AC3 (448kbps) and muxes a new MKV-file. The original MKV-file is stored with a BKP-suffix. It should contain at least (will be checked by the script):
 * Video-Track (H.264, Full-HD)
-* Audio-Track (6-Channel, german)
-* Audio-Track (6-Channel, english)
+* Audio-Track (5 to 7 channels, german)
+* Audio-Track (5 to 7 channels, english)
 
 The result will be:
 * Video-Track (H.264, Full-HD)
-* Audio-Track (AC3, 448kbps, 6-Channel, german)
-* Audio-Track (AC3, 448kbps, 6-Channel, english)
+* Audio-Track (AC3, 448kbps, 5 to 7 channels, german)
+* Audio-Track (AC3, 448kbps, 5 to 7 channels, english)
 * Default language is set to ``ger``
 
 ### License
