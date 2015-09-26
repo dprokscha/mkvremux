@@ -42,6 +42,7 @@ while IFS= read -r -d '' f; do
     ID=-1
     LANGUAGE="und"
     TYPE="und"
+    DEFAUD=-1
 
     while IFS= read -r line || [[ -n "$line" ]]; do
 
@@ -51,8 +52,13 @@ while IFS= read -r -d '' f; do
             break
         fi
 
-        if [[ "$line" = $(echo "*A track*") ]]; then
+        if [[ "$line" = $(echo "| + A track") ]]; then
             ID=$[$ID+1]
+            LANGUAGE="und"
+            TYPE="und"
+        fi
+
+        if [[ "$line" = $(echo "|+ *") ]]; then
             LANGUAGE="und"
             TYPE="und"
         fi
@@ -64,6 +70,11 @@ while IFS= read -r -d '' f; do
 
         if [[ "$line" = $(echo "*Track type: audio*") ]]; then
             TYPE="aud"
+        fi
+
+        if [ "$TYPE" = "aud" ] &&
+           [[ "$line" = $(echo "*Default flag: 0*") ]]; then
+            DEFAUD=$ID
         fi
 
         if [ "$TYPE" = "aud" ] &&
@@ -82,15 +93,29 @@ while IFS= read -r -d '' f; do
            [ "$LANGUAGE" = "eng" ] &&
            [ ! -f "$BASE/audio.eng.org.tmp" ]; then
             mkvextract tracks "$f" "$ID:$BASE/audio.eng.org.tmp"
+            LANGUAGE="und"
         fi
 
         if [ "$TYPE" = "aud" ] &&
            [ "$LANGUAGE" = "ger" ] &&
            [ ! -f "$BASE/audio.ger.org.tmp" ]; then
             mkvextract tracks "$f" "$ID:$BASE/audio.ger.org.tmp"
+            LANGUAGE="und"
         fi
 
     done < "$INFO"
+
+    if [ ! -f "$BASE/audio.eng.org.tmp" ] &&
+       [ -f "$BASE/audio.ger.org.tmp" ] &&
+       (( "$DEFAUD" >= 0 )); then
+        mkvextract tracks "$f" "$DEFAUD:$BASE/audio.eng.org.tmp"
+    fi
+
+    if [ ! -f "$BASE/audio.ger.org.tmp" ] &&
+       [ -f "$BASE/audio.eng.org.tmp" ] &&
+       (( "$DEFAUD" >= 0 )); then
+        mkvextract tracks "$f" "$DEFAUD:$BASE/audio.ger.org.tmp"
+    fi
 
     if [ ! -f "$BASE/video.h264.tmp" ] ||
        [ ! -f "$BASE/audio.eng.org.tmp" ] ||
