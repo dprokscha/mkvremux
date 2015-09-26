@@ -21,7 +21,6 @@ while IFS= read -r -d '' f; do
     BASE=$(dirname "$f")
     INFO="$BASE/mkvinfo.tmp"
 
-
     echo "Processing: $f"
     mkvinfo -r "$INFO" "$f"
 
@@ -58,7 +57,8 @@ while IFS= read -r -d '' f; do
             TYPE="und"
         fi
 
-        if [[ "$line" = $(echo "*Track type: video*") ]]; then
+        if [[ "$line" = $(echo "*Track type: video*") ]] &&
+           [ ! -f "$BASE/video.h264.tmp" ]; then
             mkvextract tracks "$f" "$ID:$BASE/video.h264.tmp"
         fi
 
@@ -79,12 +79,14 @@ while IFS= read -r -d '' f; do
         fi
 
         if [ "$TYPE" = "aud" ] &&
-           [ "$LANGUAGE" = "eng" ]; then
+           [ "$LANGUAGE" = "eng" ] &&
+           [ ! -f "$BASE/audio.eng.org.tmp" ]; then
             mkvextract tracks "$f" "$ID:$BASE/audio.eng.org.tmp"
         fi
 
         if [ "$TYPE" = "aud" ] &&
-           [ "$LANGUAGE" = "ger" ]; then
+           [ "$LANGUAGE" = "ger" ] &&
+           [ ! -f "$BASE/audio.ger.org.tmp" ]; then
             mkvextract tracks "$f" "$ID:$BASE/audio.ger.org.tmp"
         fi
 
