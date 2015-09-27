@@ -26,7 +26,7 @@ while IFS= read -r -d '' f; do
 
     if (( "$(grep -c "Track type: video" "$INFO")" > 1 )) ||
        (( "$(grep -c "h.264" "$INFO")" == 0 )) ||
-       (( "$(grep -c "Pixel width: 1920" "$INFO")" == 0 )); then
+       (( "$(grep -c "Pixel width: 19" "$INFO")" == 0 )); then
         ERR+=("$f (too many video tracks or bad video quality)")
         rm "$BASE"/*.tmp
         continue
