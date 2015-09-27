@@ -42,6 +42,7 @@ while IFS= read -r -d '' f; do
     ID=-1
     LANGUAGE="und"
     TYPE="und"
+    DEFID=-1
     DEFAUD=-1
 
     while IFS= read -r line || [[ -n "$line" ]]; do
@@ -53,54 +54,60 @@ while IFS= read -r -d '' f; do
         fi
 
         if [[ "$line" = $(echo "| + A track") ]]; then
+
+            if [ "$TYPE" = "vid" ] &&
+               [ ! -f "$BASE/video.h264.tmp" ]; then
+                mkvextract tracks "$f" "$ID:$BASE/video.h264.tmp"
+            fi
+
+            if [ "$TYPE" = "aud" ] &&
+               [ "$LANGUAGE" = "eng" ] &&
+               [ ! -f "$BASE/audio.eng.org.tmp" ]; then
+                mkvextract tracks "$f" "$ID:$BASE/audio.eng.org.tmp"
+            fi
+
+            if [ "$TYPE" = "aud" ] &&
+               [ "$LANGUAGE" = "ger" ] &&
+               [ ! -f "$BASE/audio.ger.org.tmp" ]; then
+                mkvextract tracks "$f" "$ID:$BASE/audio.ger.org.tmp"
+            fi
+
+            if [ "$TYPE" = "aud" ] &&
+               (( "$DEFID" >= 0 )); then
+                DEFAUD=$DEFID
+            fi
+
             ID=$[$ID+1]
+            DEFID=-1
             LANGUAGE="und"
             TYPE="und"
         fi
 
         if [[ "$line" = $(echo "|+ *") ]]; then
+            DEFID=-1
             LANGUAGE="und"
             TYPE="und"
         fi
 
+        if [[ "$line" = $(echo "*Default flag: 0*") ]]; then
+            DEFID=$ID
+        fi
+
         if [[ "$line" = $(echo "*Track type: video*") ]] &&
            [ ! -f "$BASE/video.h264.tmp" ]; then
-            mkvextract tracks "$f" "$ID:$BASE/video.h264.tmp"
+            TYPE="vid"
         fi
 
         if [[ "$line" = $(echo "*Track type: audio*") ]]; then
             TYPE="aud"
         fi
 
-        if [ "$TYPE" = "aud" ] &&
-           [[ "$line" = $(echo "*Default flag: 0*") ]]; then
-            DEFAUD=$ID
-        fi
-
-        if [ "$TYPE" = "aud" ] &&
-           [ "$LANGUAGE" = "und" ] &&
-           [[ "$line" = $(echo "*Language: eng*") ]]; then
+        if [[ "$line" = $(echo "*Language: eng*") ]]; then
             LANGUAGE="eng"
         fi
 
-        if [ "$TYPE" = "aud" ] &&
-           [ "$LANGUAGE" = "und" ] &&
-           [[ "$line" = $(echo "*Language: ger*") ]]; then
+        if [[ "$line" = $(echo "*Language: ger*") ]]; then
             LANGUAGE="ger"
-        fi
-
-        if [ "$TYPE" = "aud" ] &&
-           [ "$LANGUAGE" = "eng" ] &&
-           [ ! -f "$BASE/audio.eng.org.tmp" ]; then
-            mkvextract tracks "$f" "$ID:$BASE/audio.eng.org.tmp"
-            LANGUAGE="und"
-        fi
-
-        if [ "$TYPE" = "aud" ] &&
-           [ "$LANGUAGE" = "ger" ] &&
-           [ ! -f "$BASE/audio.ger.org.tmp" ]; then
-            mkvextract tracks "$f" "$ID:$BASE/audio.ger.org.tmp"
-            LANGUAGE="und"
         fi
 
     done < "$INFO"
