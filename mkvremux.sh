@@ -102,11 +102,13 @@ while IFS= read -r -d '' f; do
             TYPE="aud"
         fi
 
-        if [[ "$line" = $(echo "*Language: eng*") ]]; then
+        if [[ "$line" = $(echo "*Language: eng*") ]] ||
+           [[ "$line" = $(echo "*Name:*Eng*") ]]; then
             LANGUAGE="eng"
         fi
 
-        if [[ "$line" = $(echo "*Language: ger*") ]]; then
+        if [[ "$line" = $(echo "*Language: ger*") ]] ||
+           [[ "$line" = $(echo "*Name:*Ger*") ]]; then
             LANGUAGE="ger"
         fi
 
