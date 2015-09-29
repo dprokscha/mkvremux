@@ -53,10 +53,6 @@ while IFS= read -r -d '' f; do
             break
         fi
 
-        if [[ "$line" = $(echo "| + A track") ]]; then
-            ID=$[$ID+1]
-        fi
-
         if [[ "$line" = $(echo "| + A track") ]] ||
            [[ "$line" = $(echo "|+ *") ]]; then
 
@@ -85,6 +81,10 @@ while IFS= read -r -d '' f; do
             DEFID=-1
             LANGUAGE="und"
             TYPE="und"
+        fi
+
+        if [[ "$line" = $(echo "| + A track") ]]; then
+            ID=$[$ID+1]
         fi
 
         if [[ "$line" = $(echo "*Default flag: 0*") ]]; then
