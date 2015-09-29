@@ -54,6 +54,11 @@ while IFS= read -r -d '' f; do
         fi
 
         if [[ "$line" = $(echo "| + A track") ]]; then
+            ID=$[$ID+1]
+        fi
+
+        if [[ "$line" = $(echo "| + A track") ]] ||
+           [[ "$line" = $(echo "|+ *") ]]; then
 
             if [ "$TYPE" = "vid" ] &&
                [ ! -f "$BASE/video.h264.tmp" ]; then
@@ -77,13 +82,6 @@ while IFS= read -r -d '' f; do
                 DEFAUD=$DEFID
             fi
 
-            ID=$[$ID+1]
-            DEFID=-1
-            LANGUAGE="und"
-            TYPE="und"
-        fi
-
-        if [[ "$line" = $(echo "|+ *") ]]; then
             DEFID=-1
             LANGUAGE="und"
             TYPE="und"
