@@ -44,6 +44,8 @@ while IFS= read -r -d '' f; do
     TYPE="und"
     DEFID=-1
     DEFAUD=-1
+    DEFDUR="und"
+    TMPDUR="und"
 
     while IFS= read -r line || [[ -n "$line" ]]; do
 
@@ -73,6 +75,11 @@ while IFS= read -r -d '' f; do
                 mkvextract tracks "$f" "$ID:$BASE/audio.ger.org.tmp"
             fi
 
+            if [ "$TYPE" = "vid" ] &&
+               [ "$TMPDUR" != "und" ]; then
+                DEFDUR=$TMPDUR
+            fi
+
             if [ "$TYPE" = "aud" ] &&
                (( "$DEFID" >= 0 )); then
                 DEFAUD=$DEFID
@@ -81,6 +88,7 @@ while IFS= read -r -d '' f; do
             DEFID=-1
             LANGUAGE="und"
             TYPE="und"
+            TMPDUR="und"
         fi
 
         if [[ "$line" = $(echo "| + A track") ]]; then
@@ -91,8 +99,7 @@ while IFS= read -r -d '' f; do
             DEFID=$ID
         fi
 
-        if [[ "$line" = $(echo "*Track type: video*") ]] &&
-           [ ! -f "$BASE/video.h264.tmp" ]; then
+        if [[ "$line" = $(echo "*Track type: video*") ]]; then
             TYPE="vid"
         fi
 
@@ -108,6 +115,10 @@ while IFS= read -r -d '' f; do
         if [[ "$line" = $(echo "*Language: ger*") ]] ||
            [[ "$line" = $(echo "*Name:*Ger*") ]]; then
             LANGUAGE="ger"
+        fi
+
+        if [[ "$line" = $(echo "*Default duration:*") ]]; then
+            TMPDUR=$(echo "$line" | grep -oP "[0-9.]+ms")
         fi
 
     done < "$INFO"
@@ -143,7 +154,7 @@ while IFS= read -r -d '' f; do
     fi
 
     mv "$f" "$f.bkp"
-    mkvmerge -o "$f" --default-language "ger" "$BASE/video.h264.tmp" --language 0:ger "$BASE/audio.ger.ac3.tmp" --language 0:eng "$BASE/audio.eng.ac3.tmp"
+    mkvmerge -o "$f" --default-duration "0:$DEFDUR" --default-language "ger" "$BASE/video.h264.tmp" --language 0:ger "$BASE/audio.ger.ac3.tmp" --language 0:eng "$BASE/audio.eng.ac3.tmp"
     rm "$BASE"/*.tmp
 
 done < <(find "$DIR" -type f -name "*.mkv" -print0)
