@@ -7,7 +7,7 @@ A machine running ``/bin/bash`` with following installed packages:
 * ``libav-tools``
 
 ### Usage
-``mkvremux.sh DIRECTORY``
+``mkvremux.sh [tv] DIR``
 
 The script searches for MKV-files recursively within the given directory. If something is found, it extracts only the video and audio tracks (ignores all the rest), converts the audio from whatever to AC3 (448kbps) and muxes a new MKV-file. The original MKV-file is stored with a BKP-suffix. It should contain at least (will be checked by the script):
 * Video-Track (H.264, Full-HD)
