@@ -18,6 +18,7 @@ if [ ! -d "$DIR" ]; then
 fi
 
 while IFS= read -r -d '' f; do
+
     BASE=$(dirname "$f")
     INFO="$BASE/mkvinfo.tmp"
 
@@ -40,8 +41,8 @@ while IFS= read -r -d '' f; do
     fi
 
     ID=-1
-    LANGUAGE="und"
     TYPE="und"
+    LANGUAGE="und"
     DEFID=-1
     DEFAUD=-1
     DEFDUR="und"
@@ -86,8 +87,8 @@ while IFS= read -r -d '' f; do
             fi
 
             DEFID=-1
-            LANGUAGE="und"
             TYPE="und"
+            LANGUAGE="und"
             TMPDUR="und"
         fi
 
