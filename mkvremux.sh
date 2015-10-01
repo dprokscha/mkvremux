@@ -4,18 +4,35 @@ hash mkvinfo 2>/dev/null || { echo "Package not found: mkvtoolnix"; exit 1; }
 hash mkvmerge 2>/dev/null || { echo "Package not found: mkvtoolnix"; exit 1; }
 hash avconv 2>/dev/null || { echo "Package not found: libav-tools"; exit 1; }
 
-DIR=$(echo "$1" | tr -s /); DIR=${DIR%/}
 SCRIPT_PATH=`pwd`
 VERBOSE=0
 TESTRUN=0
 ERR=()
+
+while getopts ":tv" opt; do
+    case $opt in
+        t)
+            TESTRUN=1
+            ;;
+        v)
+            VERBOSE=1
+            ;;
+        \?)
+            echo "mkvremux [tv] DIR"
+            exit 1
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+DIR=$(echo "$1" | tr -s /); DIR=${DIR%/}
 
 if [[ "$DIR" != /* ]]; then
     DIR="$SCRIPT_PATH/$DIR"
 fi
 
 if [ ! -d "$DIR" ]; then
-    echo "Not found: $DIR"
+    echo "Not a directory: $DIR"
     exit 1
 fi
 
